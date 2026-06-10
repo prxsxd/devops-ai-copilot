@@ -1,0 +1,21 @@
+server:
+  port: 1001
+
+spring:
+  application:
+    name: devops-ai-copilot
+
+azure:
+  openai:
+    endpoint: ${AZURE_OPENAI_ENDPOINT}
+    key: ${AZURE_OPENAI_KEY}
+    deployment: gpt-4.1-mini
+
+jira:
+  base-url: ${JIRA_BASE_URL}
+  email: ${JIRA_EMAIL}
+  api-token: ${JIRA_API_TOKEN}
+  project-key: ${JIRA_PROJECT_KEY}
+  issue-type: ${JIRA_ISSUE_TYPE}
+  sprint-id: ${JIRA_SPRINT_ID}
+  sprint-field: ${JIRA_SPRINT_FIELD:customfield_10020}
