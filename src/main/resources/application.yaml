@@ -10,6 +10,16 @@ azure:
     endpoint: ${AZURE_OPENAI_ENDPOINT}
     key: ${AZURE_OPENAI_KEY}
     deployment: gpt-4.1-mini
+    embedding-endpoint: ${AZURE_OPENAI_EMBEDDING_ENDPOINT}
+    embedding-deployment: ${AZURE_OPENAI_EMBEDDING_DEPLOYMENT:text-embedding-3-small}
+  search:
+    endpoint: ${AZURE_SEARCH_ENDPOINT}
+    key: ${AZURE_SEARCH_KEY}
+    index: ${AZURE_SEARCH_INDEX:incidents}
+    # Minimum vector-similarity score (0-1) a past incident must reach to be
+    # returned as a match. Raise it if unrelated incidents still appear; lower
+    # it if genuine matches get dropped. Set to 0 to disable filtering.
+    min-score: ${AZURE_SEARCH_MIN_SCORE:0.6}
 
 jira:
   base-url: ${JIRA_BASE_URL}

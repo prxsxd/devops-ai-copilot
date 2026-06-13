@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DevOps AI Copilot</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --panel: #161b22;
+      --panel-2: #1c2430;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #2f81f7;
+      --accent-2: #1f6feb;
+      --green: #3fb950;
+      --yellow: #d29922;
+      --orange: #db6d28;
+      --red: #f85149;
+      --glow: rgba(47, 129, 247, 0.35);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+      background:
+        radial-gradient(900px 500px at 12% -8%, rgba(47,129,247,0.16), transparent 60%),
+        radial-gradient(800px 500px at 100% 0%, rgba(63,185,80,0.10), transparent 55%),
+        var(--bg);
+      background-attachment: fixed;
+    }
+    header {
+      padding: 22px 28px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      backdrop-filter: blur(8px);
+      background: rgba(13, 17, 23, 0.6);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    header h1 {
+      font-size: 21px;
+      margin: 0;
+      font-weight: 700;
+      background: linear-gradient(90deg, #58a6ff, #79c0ff 40%, #56d364);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    header .badge {
+      font-size: 12px;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 3px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.02);
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      padding: 28px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    @media (max-width: 980px) { .layout { grid-template-columns: 1fr; } }
+    .panel {
+      background: linear-gradient(180deg, rgba(28,36,48,0.55), rgba(22,27,34,0.85));
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 8px 28px rgba(0,0,0,0.28);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .panel:hover { border-color: #3d4853; }
+    .panel h2 {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin: 0 0 14px;
+      display: flex;
+      align-items: center;
+    }
+    textarea {
+      width: 100%;
+      min-height: 220px;
+      background: rgba(13,17,23,0.85);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 12.5px;
+      resize: vertical;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--glow);
+    }
+    .row { display: flex; gap: 10px; align-items: center; margin-top: 14px; }
+    button {
+      background: linear-gradient(180deg, var(--accent), var(--accent-2));
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 22px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 14px var(--glow);
+      transition: transform 0.12s ease, box-shadow 0.2s ease, filter 0.2s ease;
+    }
+    button:hover { filter: brightness(1.08); transform: translateY(-1px); box-shadow: 0 6px 20px var(--glow); }
+    button:active { transform: translateY(0); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; transform: none; }
+    button.secondary { background: transparent; border: 1px solid var(--border); color: var(--text); box-shadow: none; }
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .muted { color: var(--muted); font-size: 13px; }
+
+    /* Result card */
+    .result { display: none; }
+    .result.active { display: block; animation: fadeUp 0.35s ease; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .kv { margin-bottom: 14px; }
+    .kv .label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+    .kv .value { font-size: 14px; margin-top: 2px; }
+    .chips { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .chip {
+      font-size: 12px; font-weight: 600;
+      padding: 4px 11px; border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+    }
+    .sev-Low { color: var(--green); border-color: var(--green); }
+    .sev-Medium { color: var(--yellow); border-color: var(--yellow); }
+    .sev-High { color: var(--orange); border-color: var(--orange); }
+    .sev-Critical { color: var(--red); border-color: var(--red); }
+    .type-chip { color: var(--accent); border-color: var(--accent); }
+    a.jira {
+      color: var(--accent); text-decoration: none; font-weight: 600;
+    }
+    a.jira:hover { text-decoration: underline; }
+
+    /* Agent trace */
+    .trace { list-style: none; margin: 0; padding: 0; }
+    .trace li {
+      position: relative;
+      padding: 8px 0 8px 26px;
+      font-size: 13.5px;
+      border-left: 2px solid var(--border);
+      margin-left: 7px;
+      animation: fadeUp 0.3s ease both;
+    }
+    .trace li::before {
+      content: "";
+      position: absolute; left: -7px; top: 12px;
+      width: 12px; height: 12px;
+      background: var(--accent);
+      border-radius: 50%;
+      border: 2px solid var(--panel);
+      box-shadow: 0 0 0 3px rgba(47,129,247,0.15);
+    }
+    .trace li.tool::before { background: var(--yellow); box-shadow: 0 0 0 3px rgba(210,153,34,0.15); }
+    .trace li.final::before { background: var(--green); box-shadow: 0 0 0 3px rgba(63,185,80,0.15); }
+    .trace li.empty { border-left: none; margin-left: 0; padding-left: 0; }
+    .trace li.empty::before { display: none; }
+
+    /* Incident grid */
+    .incident {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 13px 15px;
+      margin-bottom: 10px;
+      transition: transform 0.15s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      animation: fadeUp 0.3s ease both;
+    }
+    .incident:hover { transform: translateY(-2px); border-color: #3d4853; box-shadow: 0 6px 18px rgba(0,0,0,0.3); }
+    .incident.matched { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset, 0 0 18px var(--glow); }
+    .incident .top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .incident .jirakey { font-size: 12px; color: var(--accent); font-weight: 700; }
+    .incident .summary { font-size: 13.5px; margin: 6px 0 4px; font-weight: 600; }
+    .incident .detail { font-size: 12.5px; color: var(--muted); }
+    .empty { color: var(--muted); font-size: 13px; padding: 8px 0; }
+    .count-badge {
+      font-size: 12px; color: var(--muted);
+      border: 1px solid var(--border); border-radius: 999px;
+      padding: 1px 9px; margin-left: 8px;
+      background: rgba(255,255,255,0.02);
+    }
+
+    /* Metrics strip */
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px 28px 0;
+    }
+    @media (max-width: 980px) { .metrics { grid-template-columns: repeat(2, 1fr); } }
+    .metric {
+      background: linear-gradient(180deg, rgba(28,36,48,0.55), rgba(22,27,34,0.85));
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 18px;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 8px 28px rgba(0,0,0,0.28);
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.15s ease, border-color 0.2s ease;
+    }
+    .metric:hover { transform: translateY(-2px); border-color: #3d4853; }
+    .metric::after {
+      content: "";
+      position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--accent), #56d364);
+      opacity: 0.8;
+    }
+    .metric .m-label {
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--muted);
+    }
+    .metric .m-value {
+      font-size: 26px; font-weight: 700; margin-top: 6px;
+      background: linear-gradient(90deg, #58a6ff, #79c0ff 50%, #56d364);
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.2;
+    }
+    .metric .m-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🛠️ DevOps AI Copilot</h1>
+    <span class="badge">Agentic RAG · Azure OpenAI · Azure AI Search · Jira</span>
+  </header>
+
+  <div class="metrics" id="metrics">
+    <div class="metric">
+      <div class="m-label">Incidents learned</div>
+      <div class="m-value" id="mTotal">0</div>
+      <div class="m-sub">in institutional memory</div>
+    </div>
+    <div class="metric">
+      <div class="m-label">Top failure type</div>
+      <div class="m-value" id="mTopType" style="font-size:18px;">—</div>
+      <div class="m-sub" id="mTopTypeSub">most frequent</div>
+    </div>
+    <div class="metric">
+      <div class="m-label">High / Critical</div>
+      <div class="m-value" id="mSevere">0</div>
+      <div class="m-sub" id="mSevereSub">severe incidents</div>
+    </div>
+    <div class="metric">
+      <div class="m-label">Last match rate</div>
+      <div class="m-value" id="mMatch">—</div>
+      <div class="m-sub">memory hits on last run</div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <!-- LEFT: input + result -->
+    <div>
+      <div class="panel">
+        <h2>Analyze CI/CD failure</h2>
+        <textarea id="logs" placeholder="Paste raw CI/CD build logs here..."></textarea>
+        <div class="row">
+          <button id="analyzeBtn">Analyze</button>
+          <div class="spinner" id="spinner"></div>
+          <span class="muted" id="status"></span>
+        </div>
+      </div>
+
+      <div class="panel result" id="result" style="margin-top:20px;">
+        <h2>Analysis result</h2>
+        <div class="kv">
+          <div class="chips">
+            <span class="chip type-chip" id="rType"></span>
+            <span class="chip" id="rSeverity"></span>
+            <a class="jira" id="rJira" target="_blank" rel="noopener"></a>
+          </div>
+        </div>
+        <div class="kv">
+          <div class="label">Summary</div>
+          <div class="value" id="rSummary"></div>
+        </div>
+        <div class="kv">
+          <div class="label">Root cause</div>
+          <div class="value" id="rRoot"></div>
+        </div>
+        <div class="kv">
+          <div class="label">Suggested fix</div>
+          <div class="value" id="rFix"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: agent trace + incidents -->
+    <div>
+      <div class="panel">
+        <h2>Agent trace</h2>
+        <ul class="trace" id="trace">
+          <li class="empty" style="border:none;padding-left:0;">Run an analysis to see the agent's steps.</li>
+        </ul>
+      </div>
+
+      <div class="panel" style="margin-top:20px;">
+        <h2>Incident memory <span class="count-badge" id="incCount">0</span></h2>
+        <div id="incidents">
+          <div class="empty">Loading incidents…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    function severityClass(sev) {
+      return "chip sev-" + (sev || "Medium");
+    }
+
+    function renderResult(data) {
+      $("rType").textContent = data.failureType || "UNKNOWN";
+      const sevEl = $("rSeverity");
+      sevEl.textContent = data.severity || "Medium";
+      sevEl.className = severityClass(data.severity);
+      const jira = $("rJira");
+      if (data.jiraUrl) {
+        jira.textContent = "🎫 " + (data.jiraKey || "Open ticket");
+        jira.href = data.jiraUrl;
+        jira.style.display = "inline";
+      } else {
+        jira.style.display = "none";
+      }
+      $("rSummary").textContent = data.jiraSummary || "—";
+      $("rRoot").textContent = data.rootCause || "—";
+      $("rFix").textContent = data.suggestedFix || "—";
+      $("result").classList.add("active");
+    }
+
+    function renderTrace(steps) {
+      const ul = $("trace");
+      ul.innerHTML = "";
+      if (!steps || steps.length === 0) {
+        ul.innerHTML = '<li class="empty" style="border:none;padding-left:0;">No steps recorded.</li>';
+        return;
+      }
+      steps.forEach((s) => {
+        const li = document.createElement("li");
+        if (/Searched incident memory/i.test(s)) li.className = "tool";
+        if (/final analysis/i.test(s)) li.className = "final";
+        li.textContent = s;
+        ul.appendChild(li);
+      });
+    }
+
+    function incidentCard(inc, matched) {
+      const div = document.createElement("div");
+      div.className = "incident" + (matched ? " matched" : "");
+      div.innerHTML = `
+        <div class="top">
+          <span class="jirakey">${inc.jiraKey || "—"}</span>
+          <span class="chip ${"sev-" + (inc.severity || "Medium")}">${inc.severity || "Medium"}</span>
+        </div>
+        <div class="summary">${escapeHtml(inc.summary || inc.failureType || "")}</div>
+        <div class="detail"><strong>Type:</strong> ${escapeHtml(inc.failureType || "")}</div>
+        <div class="detail"><strong>Fix:</strong> ${escapeHtml(inc.suggestedFix || "")}</div>
+      `;
+      return div;
+    }
+
+    function escapeHtml(s) {
+      return (s || "").replace(/[&<>"']/g, (c) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[c]));
+    }
+
+    async function loadIncidents(matchedKeys = []) {
+      try {
+        const res = await fetch("/api/incidents");
+        const list = await res.json();
+        const container = $("incidents");
+        $("incCount").textContent = list.length;
+        renderMetrics(list);
+        container.innerHTML = "";
+        if (list.length === 0) {
+          container.innerHTML = '<div class="empty">No incidents stored yet.</div>';
+          return;
+        }
+        const keys = new Set(matchedKeys);
+        // Show only the most recent few, plus any matched by the latest analysis.
+        const RECENT_LIMIT = 4;
+        const sorted = [...list].sort(
+          (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+        );
+        const recent = sorted.slice(0, RECENT_LIMIT);
+        const shownKeys = new Set(recent.map((inc) => inc.jiraKey));
+        const matchedExtras = sorted.filter(
+          (inc) => keys.has(inc.jiraKey) && !shownKeys.has(inc.jiraKey)
+        );
+        [...recent, ...matchedExtras].forEach((inc) =>
+          container.appendChild(incidentCard(inc, keys.has(inc.jiraKey)))
+        );
+      } catch (e) {
+        $("incidents").innerHTML = '<div class="empty">Failed to load incidents.</div>';
+      }
+    }
+
+    function renderMetrics(list) {
+      $("mTotal").textContent = list.length;
+
+      const typeCounts = {};
+      let severe = 0;
+      list.forEach((inc) => {
+        const t = inc.failureType || "UNKNOWN";
+        typeCounts[t] = (typeCounts[t] || 0) + 1;
+        if (inc.severity === "High" || inc.severity === "Critical") severe++;
+      });
+
+      let topType = "—", topCount = 0;
+      Object.entries(typeCounts).forEach(([t, c]) => {
+        if (c > topCount) { topType = t; topCount = c; }
+      });
+      $("mTopType").textContent = topType;
+      $("mTopTypeSub").textContent = topCount
+        ? `${topCount} of ${list.length} incidents` : "most frequent";
+
+      $("mSevere").textContent = severe;
+      $("mSevereSub").textContent = list.length
+        ? `${Math.round((severe / list.length) * 100)}% of all incidents` : "severe incidents";
+    }
+
+    function renderMatchRate(matchedKeys) {
+      const n = matchedKeys.length;
+      $("mMatch").textContent = n > 0 ? `${n} match${n === 1 ? "" : "es"}` : "0";
+    }
+
+    async function analyze() {
+      const logs = $("logs").value.trim();
+      if (!logs) { $("status").textContent = "Paste some logs first."; return; }
+
+      $("analyzeBtn").disabled = true;
+      $("spinner").style.display = "inline-block";
+      $("status").textContent = "Agent is analyzing…";
+      $("result").classList.remove("active");
+
+      try {
+        const res = await fetch("/api/analyze", {
+          method: "POST",
+          headers: { "Content-Type": "text/plain" },
+          body: logs
+        });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const data = await res.json();
+        renderResult(data);
+        renderTrace(data.agentSteps);
+        const matchedKeys = (data.matchedIncidents || []).map((m) => m.jiraKey);
+        renderMatchRate(matchedKeys);
+        $("status").textContent = "Done.";
+        await loadIncidents(matchedKeys);
+      } catch (e) {
+        $("status").textContent = "Error: " + e.message;
+      } finally {
+        $("analyzeBtn").disabled = false;
+        $("spinner").style.display = "none";
+      }
+    }
+
+    $("analyzeBtn").addEventListener("click", analyze);
+    loadIncidents();
+  </script>
+</body>
+</html>

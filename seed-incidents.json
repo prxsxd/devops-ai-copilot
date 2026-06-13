@@ -1,0 +1,34 @@
+[
+  {
+    "failureType": "OOM_KILLED",
+    "summary": "employee-service pod OOMKilled under load",
+    "rootCause": "The container memory limit (256Mi) was too low for the JVM heap plus an in-memory cache added recently, so Kubernetes killed the pod.",
+    "suggestedFix": "Raise the container memory limit from 256Mi to 512Mi in the deployment and set -Xmx accordingly.",
+    "severity": "High",
+    "jiraKey": "DEVOPS-118"
+  },
+  {
+    "failureType": "IMAGE_PULL",
+    "summary": "ImagePullBackOff pulling employee-service image",
+    "rootCause": "The image tag referenced in the deployment did not exist in the registry because the build job pushed a different tag.",
+    "suggestedFix": "Align the image tag in k8s/deployment.yaml with the tag produced by the CI build, or use the immutable Git SHA tag.",
+    "severity": "Medium",
+    "jiraKey": "DEVOPS-121"
+  },
+  {
+    "failureType": "MAVEN_COMPILATION",
+    "summary": "Maven compilation failed: cannot find symbol",
+    "rootCause": "A method was renamed but a caller still referenced the old name, so javac failed during the compile phase.",
+    "suggestedFix": "Update the caller to the new method name and re-run mvn clean install.",
+    "severity": "Medium",
+    "jiraKey": "DEVOPS-109"
+  },
+  {
+    "failureType": "UNIT_TEST",
+    "summary": "Flaky unit test failing in CI but passing locally",
+    "rootCause": "A test depended on the system default timezone, which differed between the developer machine and the CI agent.",
+    "suggestedFix": "Pin the timezone in the test or make the code timezone-independent.",
+    "severity": "Low",
+    "jiraKey": "DEVOPS-95"
+  }
+]
